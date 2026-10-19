@@ -1,5 +1,6 @@
 //! 真 Server 响应绘制同步重入框架生命周期时，撤销旧提交并保留已消费按键。
 #include "qingjian.h"
+#include "candidate/word.h"
 #include "support/context.h"
 #include <fcitx/inputcontextmanager.h>
 #include <fcitx/inputpanel.h>
@@ -42,7 +43,7 @@ int main(int argc, char **argv) {
         context->focusIn();
         for (char c : std::string("nihao")) assert(engine.process(context, fcitx::Key(static_cast<fcitx::KeySym>(c))));
         auto list = context->inputPanel().candidateList();
-        assert(list && list->candidate(0).text().toString() == "你好");
+        assert(list && qingjian::textOf(list->candidate(0)) == "你好");
         bool armed = true;
         const auto eventType = scenario == "ui-reset" ? fcitx::EventType::InputContextUpdateUI : fcitx::EventType::InputContextUpdatePreedit;
         auto watcher = instance.watchEvent(eventType, fcitx::EventWatcherPhase::PreInputMethod, [&](fcitx::Event &) {

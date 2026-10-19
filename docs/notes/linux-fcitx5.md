@@ -6,7 +6,11 @@
 ## 构建与测试
 
 需要 Rust 1.96、CMake 3.16、C++20 编译器、pkg-config，以及 OpenSSL（`libssl-dev`，云服务依赖的 TLS 绑定要它）、Fcitx5 Core/Config/Utils 和 nlohmann-json 的开发包；`install.sh` 开头会检查并列出缺的。
-构建最低 API 为 Fcitx5 5.1.8，CI 使用 Ubuntu 26.04 的 Fcitx5 5.1.19；Ubuntu 24.04 自带的 5.1.7 不满足要求。
+构建最低 API 为 Fcitx5 5.1.7（Ubuntu 24.04 自带），CI 使用 Ubuntu 26.04 的 Fcitx5 5.1.19。
+候选译词（`CandidateWord::comment` / `setComment`，5.1.9 起）与 `FCITX_ADDON_FACTORY_V2`（5.1.12 起）都晚于 5.1.7，更早的版本走 `src/candidate/word.h` 与 `src/factory.cpp` 里的等价实现；
+CMake 配置时探测 `setComment`（`QINGJIAN_FCITX_CANDIDATE_COMMENT`），探测到就用新 API，两条路都不改接口。
+5.1.7 的面板只画 `CandidateWord::text()`，译词按上游 `textWithComment` 的规则并进正文：候选行里译词与候选词同色、无法像 26.04 那样用浅色分开，
+测试里读正文用 `qingjian::textOf`、读译词用 `qingjian::commentOf`。
 桌面运行已验证的范围见下文，构建版本门槛不代表全部桌面已验收。
 
 ```sh
@@ -73,8 +77,9 @@ Server 启动时按 `[model] enabled`（缺省开）在后台线程加载模型�
 ## 验证环境
 
 - Ubuntu 26.04，未打补丁的 Fcitx5 5.1.19-1 / Core7 / modules，GTK4 4.22.4、Qt6 6.10.2。
+- CTest（2026-10-08）：Ubuntu 24.04.4，Fcitx5 5.1.7，45 例全通过（含用真 Server 的 `real-server` / `reentry-*` / `privacy-*`）。
 - 隔离 X11（Xvfb）、私有 D-Bus：GTK4、Qt6。
 - 真实桌面（2026-09-20）：GNOME 50 原生 Wayland，文本编辑器（GTK4）、FeatherPad（Qt6）、Firefox（snap）。Ubuntu 26.04 的 GNOME 已没有 X11 登录项。
   默认面板的外观与位置由 Fcitx5 决定：GTK4 应用里是输入模块自己画的黑白面板，Firefox 里是 Fcitx5 的橙色面板且与光标同一行，Fcitx5 自带拼音表现相同。
 - 真实桌面（2026-09-22，本地整句模型）：CachyOS，niri（原生 Wayland），Fcitx5 5.1.22，Microsoft Edge（Chromium，`--enable-wayland-ime`）与 Konsole（Qt6）：停顿后整句候选按模型换序。
-- 未验证：KDE 与其他桌面、其他发行版、GTK3 / Qt5 应用、真实 X11 桌面会话。
+- 未验证：KDE 与其他桌面、GTK3 / Qt5 应用、真实 X11 桌面会话，以及 24.04 / 5.1.7 上的真桌面输入。

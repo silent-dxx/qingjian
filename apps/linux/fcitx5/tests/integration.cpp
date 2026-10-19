@@ -1,5 +1,6 @@
 //! 无会话总线加载、默认面板回报、候选点击和协议失效回归。
 #include "qingjian.h"
+#include "candidate/word.h"
 #include "key/mapping.h"
 #include "support/context.h"
 #include "support/mock.h"
@@ -31,7 +32,7 @@ int main(int argc, char **argv) {
     assert(context.inputPanel().preedit().empty() == (mode == "inline"));
     auto candidates = context.inputPanel().candidateList();
     assert(candidates && candidates->size() == 3 && candidates->toPageable()->hasNext());
-    assert(candidates->candidate(2).comment().toString() == "hello · 生");
+    assert(qingjian::commentOf(candidates->candidate(2)) == "hello · 生");
     candidates->candidate(0).select(&context);
     assert(context.committed.empty());
     if (mode == "failure") {

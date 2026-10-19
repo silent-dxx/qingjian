@@ -3,9 +3,24 @@ cmake_minimum_required(VERSION 3.16)
 project(qingjian-fcitx5 VERSION 0.1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-find_package(Fcitx5Core 5.1.8 REQUIRED)
+find_package(Fcitx5Core 5.1.7 REQUIRED)
 find_package(nlohmann_json 3.2 REQUIRED)
 include(CTest)
+# 候选译词（5.1.9）与 FCITX_ADDON_FACTORY_V2（5.1.12）晚于 5.1.7；更早的 Fcitx5 走 word.h / factory.cpp 里的等价实现。
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_LIBRARIES Fcitx5::Core)
+check_cxx_source_compiles("
+#include <fcitx/candidatelist.h>
+struct Probe final : fcitx::CandidateWord {
+    Probe() { setComment(fcitx::Text(\"x\")); }
+    void select(fcitx::InputContext *) const override {}
+};
+int main() { Probe probe; return probe.comment().empty() ? 0 : 1; }
+" QINGJIAN_FCITX_CANDIDATE_COMMENT)
+unset(CMAKE_REQUIRED_LIBRARIES)
+if(QINGJIAN_FCITX_CANDIDATE_COMMENT)
+    add_compile_definitions(QINGJIAN_FCITX_CANDIDATE_COMMENT)
+endif()
 set(QINGJIAN_SOURCES src/qingjian.cpp src/ipc/connection.cpp src/key/mapping.cpp)
 add_library(qingjian MODULE src/factory.cpp ${QINGJIAN_SOURCES})
 target_include_directories(qingjian PRIVATE src)
