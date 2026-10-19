@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=青简输入法服务
+Name[zh_CN]=青简输入法服务
+Comment=青简（Fcitx5 插件）的本地后端，输入的中文都在它里面处理
+Exec=/home/zoe/.local/bin/qingjian-linux-server
+Terminal=false
+X-GNOME-Autostart-enabled=true
